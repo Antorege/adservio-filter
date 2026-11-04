@@ -4,31 +4,51 @@ on: [push]
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang make git curl xz-utils zip
+
       - name: Install ldid
-        run: brew install ldid
+        run: |
+          curl -Lo /tmp/ldid https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
+          chmod +x /tmp/ldid
+          sudo mv /tmp/ldid /usr/local/bin/ldid
 
       - name: Setup Theos
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
           git clone --recursive https://github.com/theos/theos.git $THEOS
-          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-          VER=$(xcrun --sdk iphoneos --show-sdk-version)
-          ln -sf "$SDK" "$THEOS/sdks/iPhoneOS${VER}.sdk"
-          ln -sf "$SDK" "$THEOS/sdks/iPhoneOS.sdk"
+
+      - name: Download SDK
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          SDK_URL=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest | \
+            python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for a in data.get('assets', []):
+    if a['name'].endswith('.tar.xz'):
+        print(a['browser_download_url'])
+        break
+")
+          echo "Downloading: $SDK_URL"
+          curl -Lo /tmp/sdk.tar.xz "$SDK_URL"
+          tar -xf /tmp/sdk.tar.xz -C $THEOS/sdks/
 
       - name: Build .deb
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
-          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           cd adservio-filter
-          make package FINALPACKAGE=1 SYSROOT="$SDK"
+          make package FINALPACKAGE=1
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
