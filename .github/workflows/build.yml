@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y clang make git curl xz-utils zip jq
+        run: sudo apt-get update -qq && sudo apt-get install -y clang make git curl xz-utils zip jq zstd
 
       - name: Install ldid
         run: |
@@ -23,11 +23,10 @@ jobs:
           THEOS: ${{ github.workspace }}/theos
         run: git clone --recursive https://github.com/theos/theos.git $THEOS
 
-            - name: Download SDK
+      - name: Download SDK
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
-          sudo apt-get install -y zstd
           RELEASE=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest)
           SDK_URL=$(echo "$RELEASE" | jq -r '.assets[0].browser_download_url')
           echo "URL: $SDK_URL"
@@ -35,3 +34,14 @@ jobs:
           file /tmp/sdk
           tar -xf /tmp/sdk -C $THEOS/sdks/ || tar --zstd -xf /tmp/sdk -C $THEOS/sdks/
           ls $THEOS/sdks/
+
+      - name: Build .deb
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: cd adservio-filter && make package FINALPACKAGE=1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdservioFilter
+          path: adservio-filter/packages/*.deb
