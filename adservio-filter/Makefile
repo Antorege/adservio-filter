@@ -1,3 +1,4 @@
+ARCHS = arm64
 THEOS_PACKAGE_SCHEME = rootless
 INSTALL_TARGET_PROCESSES = SpringBoard
 
