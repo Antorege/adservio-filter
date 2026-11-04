@@ -9,10 +9,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare Theos
-        uses: theos/actions/install-theos@v2
+      - name: Install ldid
+        run: brew install ldid
+
+      - name: Setup Theos
+        env:
+          THEOS: ${{ github.workspace }}/theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          VER=$(xcrun --sdk iphoneos --show-sdk-version)
+          ln -sf "$SDK" "$THEOS/sdks/iPhoneOS${VER}.sdk"
+          ln -sf "$SDK" "$THEOS/sdks/iPhoneOS.sdk"
 
       - name: Build .deb
+        env:
+          THEOS: ${{ github.workspace }}/theos
         run: |
           cd adservio-filter
           make package FINALPACKAGE=1
