@@ -4,41 +4,32 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y clang make git curl xz-utils zip jq zstd
-
       - name: Install ldid
-        run: |
-          curl -Lo /tmp/ldid https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
-          chmod +x /tmp/ldid
-          sudo mv /tmp/ldid /usr/local/bin/ldid
+        run: brew install ldid
 
       - name: Setup Theos
         env:
           THEOS: ${{ github.workspace }}/theos
-        run: git clone --recursive https://github.com/theos/theos.git $THEOS
-
-      - name: Download SDK
-        env:
-          THEOS: ${{ github.workspace }}/theos
         run: |
-          SDK_URL=$(curl -s "https://api.github.com/repos/theos/sdks/releases?per_page=1" | jq -r '.[0].assets[0].browser_download_url')
-          echo "URL: $SDK_URL"
-          curl -Lo /tmp/sdk "$SDK_URL"
-          file /tmp/sdk
-          mkdir -p $THEOS/sdks
-          tar -xf /tmp/sdk -C $THEOS/sdks/ 2>&1 || tar --zstd -xf /tmp/sdk -C $THEOS/sdks/ 2>&1
-          ls $THEOS/sdks/
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          VER=$(xcrun --sdk iphoneos --show-sdk-version)
+          ln -sf "$SDK" "$THEOS/sdks/iPhoneOS${VER}.sdk"
+          ln -sf "$SDK" "$THEOS/sdks/iPhoneOS.sdk"
+          sed -i '' 's/\$(error The "TARGET/$(warning The "TARGET/' $THEOS/makefiles/targets/_common/darwin_head.mk
 
       - name: Build .deb
         env:
           THEOS: ${{ github.workspace }}/theos
-        run: cd adservio-filter && make package FINALPACKAGE=1
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          cd adservio-filter
+          make package FINALPACKAGE=1 SYSROOT="$SDK"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
