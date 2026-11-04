@@ -29,21 +29,7 @@ jobs:
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           cd adservio-filter
-          cat > AdservioFilter.plist << 'PLISTEOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>Filter</key>
-              <dict>
-                  <key>Bundles</key>
-                  <array>
-                      <string>com.apple.UIKit</string>
-                  </array>
-              </dict>
-          </dict>
-          </plist>
-          PLISTEOF
+          printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>Filter</key>\n<dict>\n<key>Bundles</key>\n<array>\n<string>com.apple.UIKit</string>\n</array>\n</dict>\n</dict>\n</plist>\n' > AdservioFilter.plist
           make package FINALPACKAGE=1 SYSROOT="$SDK"
 
       - name: Upload artifact
