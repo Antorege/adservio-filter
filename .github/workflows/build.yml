@@ -10,9 +10,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y clang make git curl xz-utils zip
+        run: sudo apt-get update -qq && sudo apt-get install -y clang make git curl xz-utils zip jq
 
       - name: Install ldid
         run: |
@@ -23,32 +21,21 @@ jobs:
       - name: Setup Theos
         env:
           THEOS: ${{ github.workspace }}/theos
-        run: |
-          git clone --recursive https://github.com/theos/theos.git $THEOS
+        run: git clone --recursive https://github.com/theos/theos.git $THEOS
 
       - name: Download SDK
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
-          SDK_URL=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest | \
-            python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-for a in data.get('assets', []):
-    if a['name'].endswith('.tar.xz'):
-        print(a['browser_download_url'])
-        break
-")
-          echo "Downloading: $SDK_URL"
+          SDK_URL=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest | jq -r '.assets[] | select(.name | endswith(".tar.xz")) | .browser_download_url' | head -1)
+          echo "URL: $SDK_URL"
           curl -Lo /tmp/sdk.tar.xz "$SDK_URL"
           tar -xf /tmp/sdk.tar.xz -C $THEOS/sdks/
 
       - name: Build .deb
         env:
           THEOS: ${{ github.workspace }}/theos
-        run: |
-          cd adservio-filter
-          make package FINALPACKAGE=1
+        run: cd adservio-filter && make package FINALPACKAGE=1
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
