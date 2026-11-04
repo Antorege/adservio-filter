@@ -28,7 +28,7 @@ jobs:
           THEOS: ${{ github.workspace }}/theos
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-          cd adservio-filter/adservio-filter
+          cd adservio-filter
           cat > AdservioFilter.plist << 'PLISTEOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -50,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AdservioFilter
-          path: adservio-filter/adservio-filter/packages/*.deb
+          path: adservio-filter/packages/*.deb
