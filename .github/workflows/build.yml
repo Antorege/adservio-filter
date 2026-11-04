@@ -26,8 +26,9 @@ jobs:
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           cd adservio-filter
-          make package FINALPACKAGE=1
+          make package FINALPACKAGE=1 SYSROOT="$SDK"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
