@@ -7,33 +7,12 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Theos
-        uses: actions/checkout@v4
-        with:
-          repository: theos/theos
-          path: ${{ github.workspace }}/theos
-          submodules: recursive
-
-      - name: Cache SDKs
-        id: cache-sdks
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/theos/sdks
-          key: theos-sdks-16.5
-
-      - name: Download iOS 16.5 SDK
-        if: steps.cache-sdks.outputs.cache-hit != 'true'
-        run: |
-          curl -Lo sdk.tar.xz \
-            https://github.com/theos/sdks/releases/download/2023-06-01/iPhoneOS16.5.sdk.tar.xz
-          tar -xf sdk.tar.xz -C ${{ github.workspace }}/theos/sdks
+      - name: Prepare Theos
+        uses: theos/actions/install-theos@v2
 
       - name: Build .deb
-        env:
-          THEOS: ${{ github.workspace }}/theos
         run: |
           cd adservio-filter
           make package FINALPACKAGE=1
