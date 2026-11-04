@@ -27,12 +27,12 @@ jobs:
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
-          RELEASE=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest)
-          SDK_URL=$(echo "$RELEASE" | jq -r '.assets[0].browser_download_url')
+          SDK_URL=$(curl -s "https://api.github.com/repos/theos/sdks/releases?per_page=1" | jq -r '.[0].assets[0].browser_download_url')
           echo "URL: $SDK_URL"
           curl -Lo /tmp/sdk "$SDK_URL"
           file /tmp/sdk
-          tar -xf /tmp/sdk -C $THEOS/sdks/ || tar --zstd -xf /tmp/sdk -C $THEOS/sdks/
+          mkdir -p $THEOS/sdks
+          tar -xf /tmp/sdk -C $THEOS/sdks/ 2>&1 || tar --zstd -xf /tmp/sdk -C $THEOS/sdks/ 2>&1
           ls $THEOS/sdks/
 
       - name: Build .deb
