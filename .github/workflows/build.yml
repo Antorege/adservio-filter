@@ -23,22 +23,15 @@ jobs:
           THEOS: ${{ github.workspace }}/theos
         run: git clone --recursive https://github.com/theos/theos.git $THEOS
 
-      - name: Download SDK
+            - name: Download SDK
         env:
           THEOS: ${{ github.workspace }}/theos
         run: |
-          SDK_URL=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest | jq -r '.assets[] | select(.name | endswith(".tar.xz")) | .browser_download_url' | head -1)
+          sudo apt-get install -y zstd
+          RELEASE=$(curl -s https://api.github.com/repos/theos/sdks/releases/latest)
+          SDK_URL=$(echo "$RELEASE" | jq -r '.assets[0].browser_download_url')
           echo "URL: $SDK_URL"
-          curl -Lo /tmp/sdk.tar.xz "$SDK_URL"
-          tar -xf /tmp/sdk.tar.xz -C $THEOS/sdks/
-
-      - name: Build .deb
-        env:
-          THEOS: ${{ github.workspace }}/theos
-        run: cd adservio-filter && make package FINALPACKAGE=1
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AdservioFilter
-          path: adservio-filter/packages/*.deb
+          curl -Lo /tmp/sdk "$SDK_URL"
+          file /tmp/sdk
+          tar -xf /tmp/sdk -C $THEOS/sdks/ || tar --zstd -xf /tmp/sdk -C $THEOS/sdks/
+          ls $THEOS/sdks/
