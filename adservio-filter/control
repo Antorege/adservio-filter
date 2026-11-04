@@ -1,0 +1,8 @@
+Package: com.adserviofilter.tweak
+Name: AdservioFilter
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Description: Preferinte afisare Adservio
+Maintainer: local
+Author: local
+Section: Tweaks
